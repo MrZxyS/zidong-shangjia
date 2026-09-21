@@ -1,0 +1,16 @@
+{
+  "title": "Nombre claro del producto",
+  "category_id": "MLC0000",
+  "price": 19990,
+  "currency_id": "CLP",
+  "available_quantity": 10,
+  "buying_mode": "buy_it_now",
+  "listing_type_id": "gold_special",
+  "condition": "new",
+  "pictures": [
+    {
+      "source": "https://example.com/producto-1.jpg"
+    }
+  ],
+  "attributes": []
+}

@@ -1,0 +1,24 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+.data/
+.playwright-cli/
+outputs/
+output/
+logs/
+dist/
+build/
+work/
+npm-debug.log*
+*.log
+*.tmp
+
+# Local business data and large files
+*.xlsx
+*.xls
+*.csv
+*.zip
+*.docx
