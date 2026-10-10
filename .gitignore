@@ -6,6 +6,7 @@ node_modules/
 !.env.example
 .data/
 .playwright-cli/
+.artifact-work/
 outputs/
 output/
 logs/

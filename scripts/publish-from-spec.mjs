@@ -35,22 +35,25 @@ try {
   }
 
   if (!itemId) {
-    const prepared = path.resolve('.data', 'prepared-images', `${spec.sku}.jpg`);
-    await fs.mkdir(path.dirname(prepared), { recursive: true });
-    await sharp(path.resolve(spec.image_path)).rotate().resize(1200, 1200, {
-      fit: 'contain', background: '#ffffff'
-    }).jpeg({ quality: 90 }).toFile(prepared);
+    let picture = { id: record.picture_id };
+    if (!picture.id) {
+      const prepared = path.resolve('.data', 'prepared-images', `${spec.sku}.jpg`);
+      await fs.mkdir(path.dirname(prepared), { recursive: true });
+      await sharp(path.resolve(spec.image_path)).rotate().resize(1200, 1200, {
+        fit: 'contain', background: '#ffffff'
+      }).jpeg({ quality: 90 }).toFile(prepared);
 
-    const form = new FormData();
-    form.append('file', new Blob([await fs.readFile(prepared)], { type: 'image/jpeg' }), `${spec.sku}.jpg`);
-    const upload = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
-      method: 'POST', headers: { authorization: `Bearer ${await getAccessToken()}` }, body: form
-    });
-    const picture = await upload.json();
-    if (!upload.ok || !picture.id) throw new Error(`Picture upload failed: ${JSON.stringify(picture)}`);
-    record.picture_id = picture.id;
-    record.stage = 'picture_uploaded';
-    await save();
+      const form = new FormData();
+      form.append('file', new Blob([await fs.readFile(prepared)], { type: 'image/jpeg' }), `${spec.sku}.jpg`);
+      const upload = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+        method: 'POST', headers: { authorization: `Bearer ${await getAccessToken()}` }, body: form
+      });
+      picture = await upload.json();
+      if (!upload.ok || !picture.id) throw new Error(`Picture upload failed: ${JSON.stringify(picture)}`);
+      record.picture_id = picture.id;
+      record.stage = 'picture_uploaded';
+      await save();
+    }
 
     const attributes = [
       { id: 'BRAND', value_name: spec.brand || 'Genérica' },
@@ -103,7 +106,14 @@ try {
 
   let item = await apiRequest(`/items/${itemId}`);
   if (item.shipping?.mode !== 'me2') {
-    throw new Error(`Mercado Envios not enabled: ${JSON.stringify(item.shipping)}`);
+    await apiRequest(`/items/${itemId}`, {
+      method: 'PUT', body: { shipping: { mode: 'me2', local_pick_up: false } }
+    });
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    item = await apiRequest(`/items/${itemId}`);
+    if (item.shipping?.mode !== 'me2') {
+      throw new Error(`Mercado Envios not enabled: ${JSON.stringify(item.shipping)}`);
+    }
   }
   const flexEndpoint = `/flex/sites/MLC/items/${itemId}/v2`;
   let flex = await apiRequest(flexEndpoint);
